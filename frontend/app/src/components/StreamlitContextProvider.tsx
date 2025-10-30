@@ -28,8 +28,12 @@ import {
   LibConfig,
   LibContext,
   LibContextProps,
+  ScriptRunContext,
+  ScriptRunContextProps,
   ScriptRunState,
   ThemeConfig,
+  ThemeContext,
+  ThemeContextProps,
   useRequiredContext,
 } from "@streamlit/lib"
 import { IAppPage, IGitInfo, Logo, PageConfig } from "@streamlit/protobuf"
@@ -55,17 +59,25 @@ type AppContextValues = {
 type LibContextValues = {
   isFullScreen: boolean
   setFullScreen: (value: boolean) => void
-  activeTheme: ThemeConfig
-  setTheme: (theme: ThemeConfig) => void
-  availableThemes: ThemeConfig[]
   onPageChange: (pageScriptHash: string) => void
   currentPageScriptHash: string
   libConfig: LibConfig
-  fragmentIdsThisRun: Array<string>
   locale: typeof window.navigator.language
+  componentRegistry: ComponentRegistry
+}
+
+// Type for ThemeContext props
+type ThemeContextValues = {
+  activeTheme: ThemeConfig
+  setTheme: (theme: ThemeConfig) => void
+  availableThemes: ThemeConfig[]
+}
+
+// Type for ScriptRunContext props
+type ScriptRunContextValues = {
   scriptRunState: ScriptRunState
   scriptRunId: string
-  componentRegistry: ComponentRegistry
+  fragmentIdsThisRun: Array<string>
 }
 
 type FormsContextValues = {
@@ -73,7 +85,11 @@ type FormsContextValues = {
 }
 
 export type StreamlitContextProviderProps = PropsWithChildren<
-  AppContextValues & LibContextValues & FormsContextValues
+  AppContextValues &
+    LibContextValues &
+    ThemeContextValues &
+    ScriptRunContextValues &
+    FormsContextValues
 >
 
 /**
@@ -96,16 +112,18 @@ const StreamlitContextProvider: React.FC<StreamlitContextProviderProps> = ({
   // LibContext
   isFullScreen,
   setFullScreen,
+  libConfig,
+  locale,
+  componentRegistry,
+  // ThemeContext
   activeTheme,
   setTheme,
   availableThemes,
-  libConfig,
-  fragmentIdsThisRun,
-  locale,
+  // ScriptRunContext
   scriptRunState,
   scriptRunId,
-  componentRegistry,
-  // Used in both contexts
+  fragmentIdsThisRun,
+  // Used in both AppContext and LibContext
   currentPageScriptHash,
   onPageChange,
   // FormsContext
@@ -152,33 +170,41 @@ const StreamlitContextProvider: React.FC<StreamlitContextProviderProps> = ({
     () => ({
       isFullScreen,
       setFullScreen,
-      activeTheme,
-      setTheme,
-      availableThemes,
       onPageChange,
       currentPageScriptHash,
       libConfig,
-      fragmentIdsThisRun,
       locale,
-      scriptRunState,
-      scriptRunId,
       componentRegistry,
     }),
     [
       isFullScreen,
       setFullScreen,
-      activeTheme,
-      setTheme,
-      availableThemes,
       onPageChange,
       currentPageScriptHash,
       libConfig,
-      fragmentIdsThisRun,
       locale,
-      scriptRunState,
-      scriptRunId,
       componentRegistry,
     ]
+  )
+
+  // Memoized object for ThemeContext values
+  const themeContextProps = useMemo<ThemeContextProps>(
+    () => ({
+      activeTheme,
+      setTheme,
+      availableThemes,
+    }),
+    [activeTheme, setTheme, availableThemes]
+  )
+
+  // Memoized object for ScriptRunContext values
+  const scriptRunContextProps = useMemo<ScriptRunContextProps>(
+    () => ({
+      scriptRunState,
+      scriptRunId,
+      fragmentIdsThisRun,
+    }),
+    [scriptRunState, scriptRunId, fragmentIdsThisRun]
   )
 
   // formsData is not a stable reference, so memoization does not help
@@ -190,9 +216,13 @@ const StreamlitContextProvider: React.FC<StreamlitContextProviderProps> = ({
   return (
     <AppContext.Provider value={appContextProps}>
       <LibContext.Provider value={libContextProps}>
-        <FormsContext.Provider value={formsContextProps}>
-          {children}
-        </FormsContext.Provider>
+        <ThemeContext.Provider value={themeContextProps}>
+          <FormsContext.Provider value={formsContextProps}>
+            <ScriptRunContext.Provider value={scriptRunContextProps}>
+              {children}
+            </ScriptRunContext.Provider>
+          </FormsContext.Provider>
+        </ThemeContext.Provider>
       </LibContext.Provider>
     </AppContext.Provider>
   )

@@ -34,6 +34,7 @@ import {
   shouldWidthStretch,
 } from "~lib/components/core/Layout/utils"
 import { LibContext } from "~lib/components/core/LibContext"
+import { ScriptRunContext } from "~lib/components/core/ScriptRunContext"
 import ChatMessage from "~lib/components/elements/ChatMessage"
 import Dialog from "~lib/components/elements/Dialog"
 import Expander from "~lib/components/elements/Expander"
@@ -298,8 +299,8 @@ const MEDIUM_STRETCH_BEHAVIOR = ["chatInput"]
 
 const BlockNodeRenderer = (props: BlockPropsWithoutWidth): ReactElement => {
   const { node } = props
-  const { fragmentIdsThisRun, scriptRunState, scriptRunId } =
-    useContext(LibContext)
+  const { scriptRunState, scriptRunId, fragmentIdsThisRun } =
+    useContext(ScriptRunContext)
 
   let minStretchBehavior: MinFlexElementWidth
   if (LARGE_STRETCH_BEHAVIOR.includes(node.deltaBlock.type ?? "")) {

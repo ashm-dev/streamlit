@@ -43,8 +43,8 @@ import {
   ContainerContentsWrapper,
   FileUploadClient,
   IGuestToHostMessage,
-  LibContext,
   Profiler,
+  ThemeContext,
   useExecuteWhenChanged,
   useWindowDimensionsContext,
   WidgetStateManager,
@@ -151,7 +151,7 @@ function AppView(props: AppViewProps): ReactElement {
 
   const { initialSidebarState, widgetsDisabled, showToolbar } = useAppContext()
 
-  const { activeTheme } = useContext(LibContext)
+  const { activeTheme } = useContext(ThemeContext)
 
   const { innerWidth } = useWindowDimensionsContext()
 

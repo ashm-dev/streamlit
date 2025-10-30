@@ -122,7 +122,11 @@ describe("useWidgetManagerElementState hook", () => {
 
     renderWithContexts(
       <TestComponent />,
+      // LibContext overrides
       {},
+      // ThemeContext overrides
+      {},
+      // FormsContext overrides
       {
         formsData: createFormsData(),
       }

@@ -93,10 +93,20 @@ describe("ElementNodeRenderer Block Component", () => {
       const props = getProps({
         node: createBalloonNode(scriptRunId),
       })
-      renderWithContexts(<ElementNodeRenderer {...props} />, {
-        scriptRunState: ScriptRunState.RUNNING,
-        scriptRunId: "NEW_SCRIPT_ID",
-      })
+      renderWithContexts(
+        <ElementNodeRenderer {...props} />,
+        // LibContext overrides
+        {},
+        // ThemeContext overrides
+        {},
+        // FormsContext overrides
+        {},
+        // ScriptRunContext overrides
+        {
+          scriptRunState: ScriptRunState.RUNNING,
+          scriptRunId: "NEW_SCRIPT_ID",
+        }
+      )
 
       await waitFor(() =>
         expect(screen.queryByTestId("stSkeleton")).toBeNull()
@@ -112,9 +122,19 @@ describe("ElementNodeRenderer Block Component", () => {
       const props = getProps({
         node: createBalloonNode(scriptRunId),
       })
-      renderWithContexts(<ElementNodeRenderer {...props} />, {
-        scriptRunId,
-      })
+      renderWithContexts(
+        <ElementNodeRenderer {...props} />,
+        // LibContext overrides
+        {},
+        // ThemeContext overrides
+        {},
+        // FormsContext overrides
+        {},
+        // ScriptRunContext overrides
+        {
+          scriptRunId,
+        }
+      )
 
       await waitFor(() =>
         expect(screen.queryByTestId("stSkeleton")).toBeNull()
@@ -133,10 +153,20 @@ describe("ElementNodeRenderer Block Component", () => {
       const props = getProps({
         node: createSnowNode(scriptRunId),
       })
-      renderWithContexts(<ElementNodeRenderer {...props} />, {
-        scriptRunState: ScriptRunState.RUNNING,
-        scriptRunId: "NEW_SCRIPT_ID",
-      })
+      renderWithContexts(
+        <ElementNodeRenderer {...props} />,
+        // LibContext overrides
+        {},
+        // ThemeContext overrides
+        {},
+        // FormsContext overrides
+        {},
+        // ScriptRunContext overrides
+        {
+          scriptRunState: ScriptRunState.RUNNING,
+          scriptRunId: "NEW_SCRIPT_ID",
+        }
+      )
 
       await waitFor(() =>
         expect(screen.queryByTestId("stSkeleton")).toBeNull()
@@ -151,9 +181,19 @@ describe("ElementNodeRenderer Block Component", () => {
       const props = getProps({
         node: createSnowNode(scriptRunId),
       })
-      renderWithContexts(<ElementNodeRenderer {...props} />, {
-        scriptRunId,
-      })
+      renderWithContexts(
+        <ElementNodeRenderer {...props} />,
+        // LibContext overrides
+        {},
+        // ThemeContext overrides
+        {},
+        // FormsContext overrides
+        {},
+        // ScriptRunContext overrides
+        {
+          scriptRunId,
+        }
+      )
 
       await waitFor(() =>
         expect(screen.queryByTestId("stSkeleton")).toBeNull()

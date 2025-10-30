@@ -30,6 +30,14 @@ import {
 import { FlexContext } from "./components/core/Layout/FlexContext"
 import { Direction } from "./components/core/Layout/utils"
 import { LibContext, LibContextProps } from "./components/core/LibContext"
+import {
+  ScriptRunContext,
+  ScriptRunContextProps,
+} from "./components/core/ScriptRunContext"
+import {
+  ThemeContext,
+  ThemeContextProps,
+} from "./components/core/ThemeContext"
 import ThemeProvider from "./components/core/ThemeProvider"
 import { WindowDimensionsProvider } from "./components/shared/WindowDimensions/Provider"
 import { ComponentRegistry } from "./components/widgets/CustomComponent/ComponentRegistry"
@@ -45,12 +53,28 @@ const flexContextValue = {
   isInContentWidthContainer: false,
 }
 
+const defaultScriptRunContextValue = {
+  scriptRunState: ScriptRunState.NOT_RUNNING,
+  scriptRunId: "script run 123",
+  fragmentIdsThisRun: [],
+}
+
+const defaultThemeContextValue = {
+  activeTheme: mockTheme,
+  setTheme: vi.fn(),
+  availableThemes: [],
+}
+
 export const TestAppWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
     <ThemeProvider theme={mockTheme.emotion}>
       <WindowDimensionsProvider>
         <FlexContext.Provider value={flexContextValue}>
-          {children}
+          <ThemeContext.Provider value={defaultThemeContextValue}>
+            <ScriptRunContext.Provider value={defaultScriptRunContextValue}>
+              {children}
+            </ScriptRunContext.Provider>
+          </ThemeContext.Provider>
         </FlexContext.Provider>
       </WindowDimensionsProvider>
     </ThemeProvider>
@@ -90,20 +114,31 @@ export function mockWindowLocation(hostname: string): void {
 export interface RenderWithContextsResult extends RenderResult {
   /**
    * Re-render the component with updated context values.
+   *
+   * Parameter order matches the provider nesting order (outer → inner):
+   * LibContext → ThemeContext → FormsContext → ScriptRunContext
+   *
    * @param component The component to render (usually the same component with updated props)
    * @param newLibContextProps New LibContext overrides to merge with existing values
+   * @param newThemeContextProps New ThemeContext overrides to merge with existing values
    * @param newFormsContextProps New FormsContext overrides to merge with existing values
+   * @param newScriptRunContextProps New ScriptRunContext overrides to merge with existing values
    */
   rerenderWithContexts: (
     component: ReactElement,
     newLibContextProps?: Partial<LibContextProps>,
-    newFormsContextProps?: Partial<FormsContextProps>
+    newThemeContextProps?: Partial<ThemeContextProps>,
+    newFormsContextProps?: Partial<FormsContextProps>,
+    newScriptRunContextProps?: Partial<ScriptRunContextProps>
   ) => void
 }
 
 /**
  * Use react-testing-library to render a ReactElement. The element will be
- * wrapped in our LibContext.Provider and FormsContext.Provider.
+ * wrapped in our LibContext.Provider, ThemeContext.Provider, FormsContext.Provider, and ScriptRunContext.Provider.
+ *
+ * Parameter order matches the provider nesting order (outer → inner):
+ * LibContext → ThemeContext → FormsContext → ScriptRunContext
  *
  * Returns an extended RenderResult with a `rerenderWithContexts` method that
  * allows updating context values during re-renders.
@@ -111,36 +146,53 @@ export interface RenderWithContextsResult extends RenderResult {
 export const renderWithContexts = (
   component: ReactElement,
   overrideLibContextProps: Partial<LibContextProps> = {},
-  overrideFormsContextProps?: Partial<FormsContextProps>
+  overrideThemeContextProps: Partial<ThemeContextProps> = {},
+  overrideFormsContextProps: Partial<FormsContextProps> = {},
+  overrideScriptRunContextProps: Partial<ScriptRunContextProps> = {}
 ): RenderWithContextsResult => {
   const defaultLibContextProps = {
     isFullScreen: false,
     setFullScreen: vi.fn(),
-    activeTheme: mockTheme,
-    setTheme: vi.fn(),
-    availableThemes: [],
     onPageChange: vi.fn(),
     currentPageScriptHash: "",
     libConfig: {},
-    fragmentIdsThisRun: [],
     locale: "en-US",
-    scriptRunState: ScriptRunState.NOT_RUNNING,
-    scriptRunId: "script run 123",
     componentRegistry: new ComponentRegistry(mockEndpoints()),
+  }
+
+  const defaultThemeContextProps = {
+    activeTheme: mockTheme,
+    setTheme: vi.fn(),
+    availableThemes: [],
   }
 
   const defaultFormsContextProps = {
     formsData: createFormsData(),
   }
 
+  const defaultScriptRunContextProps = {
+    scriptRunState: ScriptRunState.NOT_RUNNING,
+    scriptRunId: "script run 123",
+    fragmentIdsThisRun: [],
+  }
+
   // Track current context values across rerenders
+  // Order matches provider nesting: LibContext → ThemeContext → FormsContext → ScriptRunContext
   let currentLibContextProps = {
     ...defaultLibContextProps,
     ...overrideLibContextProps,
   }
+  let currentThemeContextProps = {
+    ...defaultThemeContextProps,
+    ...overrideThemeContextProps,
+  }
   let currentFormsContextProps = {
     ...defaultFormsContextProps,
     ...overrideFormsContextProps,
+  }
+  let currentScriptRunContextProps = {
+    ...defaultScriptRunContextProps,
+    ...overrideScriptRunContextProps,
   }
 
   const Wrapper: FC<PropsWithChildren> = ({ children }) => (
@@ -148,9 +200,15 @@ export const renderWithContexts = (
       <WindowDimensionsProvider>
         <FlexContext.Provider value={flexContextValue}>
           <LibContext.Provider value={currentLibContextProps}>
-            <FormsContext.Provider value={currentFormsContextProps}>
-              {children}
-            </FormsContext.Provider>
+            <ThemeContext.Provider value={currentThemeContextProps}>
+              <FormsContext.Provider value={currentFormsContextProps}>
+                <ScriptRunContext.Provider
+                  value={currentScriptRunContextProps}
+                >
+                  {children}
+                </ScriptRunContext.Provider>
+              </FormsContext.Provider>
+            </ThemeContext.Provider>
           </LibContext.Provider>
         </FlexContext.Provider>
       </WindowDimensionsProvider>
@@ -166,19 +224,34 @@ export const renderWithContexts = (
     rerenderWithContexts: (
       newComponent: ReactElement,
       newLibContextProps?: Partial<LibContextProps>,
-      newFormsContextProps?: Partial<FormsContextProps>
+      newThemeContextProps?: Partial<ThemeContextProps>,
+      newFormsContextProps?: Partial<FormsContextProps>,
+      newScriptRunContextProps?: Partial<ScriptRunContextProps>
     ): void => {
       // Update context values if provided
+      // Order matches provider nesting: LibContext → ThemeContext → FormsContext → ScriptRunContext
       if (newLibContextProps) {
         currentLibContextProps = {
           ...currentLibContextProps,
           ...newLibContextProps,
         }
       }
+      if (newThemeContextProps) {
+        currentThemeContextProps = {
+          ...currentThemeContextProps,
+          ...newThemeContextProps,
+        }
+      }
       if (newFormsContextProps) {
         currentFormsContextProps = {
           ...currentFormsContextProps,
           ...newFormsContextProps,
+        }
+      }
+      if (newScriptRunContextProps) {
+        currentScriptRunContextProps = {
+          ...currentScriptRunContextProps,
+          ...newScriptRunContextProps,
         }
       }
       // Use the original rerender with the wrapper
