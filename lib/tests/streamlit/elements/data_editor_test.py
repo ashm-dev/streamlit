@@ -566,6 +566,7 @@ class DataEditorTest(DeltaGeneratorTestCase):
         assert proto.id != ""
         # Row height should not be set if not specified
         assert not proto.HasField("row_height")
+        assert not proto.HasField("placeholder")
 
     def test_just_disabled_true(self):
         """Test that it can be called with disabled=True param."""
@@ -625,6 +626,13 @@ class DataEditorTest(DeltaGeneratorTestCase):
 
         proto = self.get_delta_from_queue().new_element.arrow_data_frame
         assert proto.row_height == 100
+
+    def test_placeholder_parameter(self):
+        """Test that it can be called with placeholder."""
+        st.data_editor(pd.DataFrame(), placeholder="N/A")
+
+        proto = self.get_delta_from_queue().new_element.arrow_data_frame
+        assert proto.placeholder == "N/A"
 
     def test_just_use_container_width(self):
         """Test that use_container_width parameter works and shows deprecation warning."""
